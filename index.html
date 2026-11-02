@@ -300,18 +300,19 @@ dialog h2{margin:0 0 12px;font-size:1rem}
 
   <nav class="nav" role="tablist" aria-label="Seções do app">
     <button class="nav-btn" role="tab" id="tab-checklist" aria-selected="true" aria-controls="panel-checklist" data-action="tab" data-tab="checklist"><span class="ico" aria-hidden="true">📋</span>Checklist</button>
+    <button class="nav-btn" role="tab" id="tab-servico" aria-selected="false" aria-controls="panel-checklist" data-action="tab" data-tab="servico"><span class="ico" aria-hidden="true">🛡️</span>Serviço</button>
     <button class="nav-btn" role="tab" id="tab-acoes" aria-selected="false" aria-controls="panel-acoes" data-action="tab" data-tab="acoes"><span class="ico" aria-hidden="true">⚙️</span>Ações</button>
   </nav>
 
   <div class="content">
     <header class="appbar">
       <img src="icons/icon-192.png" alt="" width="40" height="40">
-      <div><small>EB · Campo</small><h1>Checklist de Material</h1></div>
+      <div><small id="appKicker">EB · Campo</small><h1 id="appTitle">Checklist de Material</h1></div>
     </header>
 
     <main>
       <!-- ============ CHECKLIST ============ -->
-      <section id="panel-checklist" class="panel active" role="tabpanel" aria-labelledby="tab-checklist">
+      <section id="panel-checklist" class="panel active" role="tabpanel" aria-labelledby="tab-checklist" >
 
         <details class="activity" id="activityBox">
           <summary><span aria-hidden="true">📝</span><span class="sum-text" id="activitySummary">Atividade</span></summary>
@@ -433,10 +434,23 @@ dialog h2{margin:0 0 12px;font-size:1rem}
 /* ============================================================
    Dados padrão — [{name, items:[[nome, {qty?, highUse?, comigo?}]]}]
    ============================================================ */
-const DEFAULTS = [{"name": "Higiene Pessoal", "items": [["Shampoo"], ["Sabonete"], ["Repelente de Insetos"], ["Pente"], ["Desodorante"], ["Escova de Dente"], ["Pasta de Dente"], ["Protetor Solar"], ["Batom de Cacau"], ["Barbeador Elétrico"], ["Cortador de Unha"], ["Álcool"], ["Papel Higiênico"]]}, {"name": "Roupas Íntimas & Meias", "items": [["Cueca", {"highUse": true}], ["Meia Branca", {"highUse": true}], ["Meia de Coturno", {"highUse": true}], ["Meia VO", {"highUse": true}]]}, {"name": "Uniformes & Vestuário", "items": [["Camiseta Camuflada"], ["Camiseta de Passeio"], ["Camiseta TFM"], ["Calça de Passeio"], ["Calça Camuflada"], ["Short de Passeio"], ["Short TFM"], ["Camiseta de Dormir"], ["Luva"], ["Boina"], ["Gandola"], ["Cinto VO"], ["Cinto de Passeio"], ["Chapéu Tático"], ["Soutaches"], ["Gorro Velame"]]}, {"name": "Calçados", "items": [["Tênis de TFM"], ["Tênis de Passeio"], ["Coturno"], ["Chinelo"]]}, {"name": "Eletrônicos", "items": [["Celular", {"comigo": true}], ["Carregador de Celular"], ["PowerBank"], ["Carregador de Carro"], ["Notebook"], ["Carregador de Notebook"], ["Tablet"], ["Mouse"], ["Pilha"], ["Pen-drive"], ["Bolsa de Cabos"], ["Adaptador em \"T\""], ["Extensão de Tomada"], ["Relógio", {"comigo": true}], ["Carregador do Relógio"], ["Fone de Ouvido", {"comigo": true}]]}, {"name": "Diversos", "items": [["Óculos de Grau"], ["Óculos Escuros", {"comigo": true}], ["Bloco de Anotações"]]}, {"name": "Medicamentos", "items": [["Tylenol (Comprimido)"], ["Allegra (Comprimido)"]]}, {"name": "Cama & Dormir", "items": [["Protetor de Colchão"], ["Lençol de Cama"], ["Saco de Dormir"], ["Cobertor"], ["Travesseiro"], ["Fronha"]]}, {"name": "Lavanderia & Sacos", "items": [["Detergente"], ["Sabão em Pó"], ["Saco Plástico para Lavar Roupa"], ["Sacolas de Mercado", {"qty": 2}], ["Saco de Lixo para Roupa Suja"]]}];
+const DEFAULTS_CAMPO = [{"name": "Higiene Pessoal", "items": [["Shampoo"], ["Sabonete"], ["Repelente de Insetos"], ["Pente"], ["Desodorante"], ["Escova de Dente"], ["Pasta de Dente"], ["Protetor Solar"], ["Batom de Cacau"], ["Barbeador Elétrico"], ["Cortador de Unha"], ["Álcool"], ["Papel Higiênico"]]}, {"name": "Roupas Íntimas & Meias", "items": [["Cueca", {"highUse": true}], ["Meia Branca", {"highUse": true}], ["Meia de Coturno", {"highUse": true}], ["Meia VO", {"highUse": true}]]}, {"name": "Uniformes & Vestuário", "items": [["Camiseta Camuflada"], ["Camiseta de Passeio"], ["Camiseta TFM"], ["Calça de Passeio"], ["Calça Camuflada"], ["Short de Passeio"], ["Short TFM"], ["Camiseta de Dormir"], ["Luva"], ["Boina"], ["Gandola"], ["Cinto VO"], ["Cinto de Passeio"], ["Chapéu Tático"], ["Soutaches"], ["Gorro Velame"]]}, {"name": "Calçados", "items": [["Tênis de TFM"], ["Tênis de Passeio"], ["Coturno"], ["Chinelo"]]}, {"name": "Eletrônicos", "items": [["Celular", {"comigo": true}], ["Carregador de Celular"], ["PowerBank"], ["Carregador de Carro"], ["Notebook"], ["Carregador de Notebook"], ["Tablet"], ["Mouse"], ["Pilha"], ["Pen-drive"], ["Bolsa de Cabos"], ["Adaptador em \"T\""], ["Extensão de Tomada"], ["Relógio", {"comigo": true}], ["Carregador do Relógio"], ["Fone de Ouvido", {"comigo": true}]]}, {"name": "Diversos", "items": [["Óculos de Grau"], ["Óculos Escuros", {"comigo": true}], ["Bloco de Anotações"]]}, {"name": "Medicamentos", "items": [["Tylenol (Comprimido)"], ["Allegra (Comprimido)"]]}, {"name": "Cama & Dormir", "items": [["Protetor de Colchão"], ["Lençol de Cama"], ["Saco de Dormir"], ["Cobertor"], ["Travesseiro"], ["Fronha"]]}, {"name": "Lavanderia & Sacos", "items": [["Detergente"], ["Sabão em Pó"], ["Saco Plástico para Lavar Roupa"], ["Sacolas de Mercado", {"qty": 2}], ["Saco de Lixo para Roupa Suja"]]}];
+const DEFAULTS_SERVICO = [{"name": "Documentos & Pessoal", "items": [["Identidade Militar"], ["Carteira / Dinheiro"], ["Celular", {"comigo": true}], ["Carregador de Celular"], ["PowerBank"], ["Relógio", {"comigo": true}], ["Caneta"], ["Bloco de Anotações"]]}, {"name": "Uniforme", "items": [["Gandola"], ["Calça Camuflada"], ["Coturno"], ["Cinto VO"], ["Boina"], ["Camiseta", {"highUse": true}], ["Meia VO", {"highUse": true}], ["Cueca", {"highUse": true}]]}, {"name": "Higiene Mínima", "items": [["Escova e Pasta de Dente"], ["Desodorante"], ["Sabonete"], ["Toalha"], ["Papel Higiênico"], ["Repelente de Insetos"], ["Protetor Solar"]]}, {"name": "Alimentação & Hidratação", "items": [["Cantil / Garrafa de Água"], ["Marmita / Lanche"], ["Talheres"]]}, {"name": "Equipamento", "items": [["Lanterna"], ["Pilhas"], ["Capa de Chuva / Poncho"], ["Sacola para Roupa Suja"]]}, {"name": "Saúde", "items": [["Medicamentos Pessoais"]]}, {"name": "Se tiver pernoite", "items": [["Cobertor / Lençol"], ["Travesseiro"], ["Chinelo"]]}];
+/* Duas listas independentes: "campo" (saídas longas) e "serviço" (serviço/operação de 1–2 dias) */
+const PROFILES={
+  campo:{suffix:'',kicker:'EB · Campo',title:'Checklist de Material',exportTitle:'CHECKLIST DE CAMPO',sheetTitle:'Checklist de Campo EB',ph:'Ex: Exercício de campo — Serra do Mar',defaults:DEFAULTS_CAMPO},
+  servico:{suffix:'_servico',kicker:'EB · Serviço · 1 a 2 dias',title:'Serviço / Op. pequena',exportTitle:'CHECKLIST DE SERVIÇO',sheetTitle:'Checklist de Serviço EB',ph:'Ex: Serviço de Dia — Op. Garantia da Lei',defaults:DEFAULTS_SERVICO}
+};
+let profile='campo', DEFAULTS=DEFAULTS_CAMPO;
 
-const KEY='checklistCampoEB_v1', REMOVED_KEY='checklistCampoEB_removed_v1',
-      ACTIVITY_KEY='checklistCampoEB_activity_v1', DAYS_KEY='checklistCampoEB_days_v1', THEME_KEY='checklistCampoEB_theme_v1';
+let KEY, REMOVED_KEY, ACTIVITY_KEY, DAYS_KEY;
+const THEME_KEY='checklistCampoEB_theme_v1';
+function setProfileKeys(p){
+  profile=p;const s=PROFILES[p].suffix;DEFAULTS=PROFILES[p].defaults;
+  KEY='checklistCampoEB_v1'+s;REMOVED_KEY='checklistCampoEB_removed_v1'+s;
+  ACTIVITY_KEY='checklistCampoEB_activity_v1'+s;DAYS_KEY='checklistCampoEB_days_v1'+s;
+  GSHEET_KEY='checklistCampoEB_gsheet_v1'+s;
+}
 const STATUSES=['indefinido','casa','quartel','comprar','nao'];
 const STATUS_LABEL={indefinido:'Sem definir',casa:'Levar de casa',quartel:'Já no quartel',comprar:'Comprar',nao:'Não levo'};
 const BAGS={mala:{icon:'🧳',label:'Mala',field:'emMala'},mochila:{icon:'🎒',label:'Mochila',field:'emMochila'},caixa:{icon:'📦',label:'Caixa Preta',field:'emCaixa'}};
@@ -684,10 +698,26 @@ function updateActivitySummary(){
 }
 
 /* ============ Ações ============ */
+function applyProfileUi(){
+  const P=PROFILES[profile];
+  $('#appKicker').textContent=P.kicker;$('#appTitle').textContent=P.title;
+  $('#activityName').placeholder=P.ph;
+  document.title=P.title+' · EB';
+}
+function switchProfile(p){
+  if(p===profile)return;
+  setProfileKeys(p);load();expanded.clear();statusFilter=null;pendingOnly=false;$('#searchInput').value='';
+  $('#activityName').value=store.get(ACTIVITY_KEY)||'';$('#activityDays').value=store.get(DAYS_KEY)||'';
+  $('#activityBox').open=!$('#activityName').value&&!$('#activityDays').value;
+  applyProfileUi();gShowLink();setGStatus('');
+  $('#manageList').dataset.built='';render();
+}
 function setTab(t){
   currentTab=t;
+  if(t==='checklist'||t==='servico')switchProfile(t==='servico'?'servico':'campo');
+  const panel=(t==='acoes')?'acoes':'checklist';
   $$('.nav-btn').forEach(b=>b.setAttribute('aria-selected',b.dataset.tab===t));
-  $$('.panel').forEach(p=>p.classList.toggle('active',p.id==='panel-'+t));
+  $$('.panel').forEach(p=>p.classList.toggle('active',p.id==='panel-'+panel));
   window.scrollTo({top:0});
 }
 function touchItem(id){expanded.add(id);}
@@ -771,7 +801,7 @@ const handlers={
   },
   'suggest-qty'(){
     const days=parseInt($('#activityDays').value,10);
-    if(!Number.isFinite(days)||days<1){toast('Preencha “Dias” na aba Checklist primeiro.');setTab('checklist');$('#activityBox').open=true;setTimeout(()=>$('#activityDays').focus(),50);return;}
+    if(!Number.isFinite(days)||days<1){toast('Preencha “Dias” na aba da lista primeiro.');setTab(profile==='servico'?'servico':'checklist');$('#activityBox').open=true;setTimeout(()=>$('#activityDays').focus(),50);return;}
     let n=0;
     mutate(`${days} dia(s): quantidades de uso diário ajustadas`,()=>{data.forEach(c=>c.items.forEach(i=>{if(i.highUse){i.qty=days;n++;}}));});
   },
@@ -783,9 +813,9 @@ const handlers={
   },
   whats(){window.open('https://wa.me/?text='+encodeURIComponent(buildExportText()),'_blank','noopener');},
   'backup-down'(){
-    const payload={app:'checklist-campo-eb',version:2,exportedAt:new Date().toISOString(),activityName:$('#activityName').value,activityDays:$('#activityDays').value,removed:removedList,data};
+    const payload={app:'checklist-campo-eb',version:2,profile,exportedAt:new Date().toISOString(),activityName:$('#activityName').value,activityDays:$('#activityDays').value,removed:removedList,data};
     const url=URL.createObjectURL(new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}));
-    const a=document.createElement('a');a.href=url;a.download='checklist-campo-backup-'+new Date().toISOString().slice(0,10)+'.json';
+    const a=document.createElement('a');a.href=url;a.download='checklist-'+profile+'-backup-'+new Date().toISOString().slice(0,10)+'.json';
     document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);
     toast('Backup baixado ✅');
   },
@@ -833,7 +863,7 @@ $('#backupFile').addEventListener('change',e=>{
 function buildExportText(){
   const name=$('#activityName').value.trim(),days=$('#activityDays').value.trim();
   const L=[];
-  L.push('📋 *CHECKLIST DE CAMPO*'+(name?' — '+name:''));
+  L.push('📋 *'+PROFILES[profile].exportTitle+'*'+(name?' — '+name:''));
   if(days)L.push('Duração: '+days+' dia(s)');
   L.push('Atualizado em '+new Date().toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'}));L.push('');
   data.forEach(cat=>{
@@ -882,7 +912,8 @@ if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostnam
 }
 
 /* ============ Google Planilhas (login + dashboard no Drive) ============ */
-const GCLIENT_KEY='checklistCampoEB_gclient_v1', GSHEET_KEY='checklistCampoEB_gsheet_v1';
+const GCLIENT_KEY='checklistCampoEB_gclient_v1';
+let GSHEET_KEY='checklistCampoEB_gsheet_v1';
 const GOOGLE_CLIENT_ID='';   // opcional: fixe aqui o Client ID para não precisar digitar
 const GSCOPE='https://www.googleapis.com/auth/drive.file';
 let gisPromise=null,gToken=null,gTokenExp=0,gBusy=false;
@@ -929,7 +960,7 @@ function gBuildDash(){
   const n=Math.max(cats.length+4,19);
   const g=Array.from({length:n},()=>Array(8).fill(''));
   const R='Itens!$';
-  g[0][0]='Checklist de Campo EB'+(name?' — '+name:'')+(days?' ('+days+' dia(s))':'');
+  g[0][0]=PROFILES[profile].sheetTitle+(name?' — '+name:'')+(days?' ('+days+' dia(s))':'');
   g[1][0]='Atualizado em '+new Date().toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'});
   g[2][0]='RESUMO';g[2][3]='POR CATEGORIA';
   g[3][0]='Total de itens';g[3][1]='=COUNTA(Itens!$B$2:$B)';
@@ -1000,7 +1031,7 @@ async function gSync(){
     if(id){try{await gApi('GET',SHEETS+'/'+id+'?fields=spreadsheetId');}catch(e){if(e.status===404||e.status===403)id=null;else throw e;}}
     if(!id){
       setGStatus('Criando planilha no Drive…');
-      const r=await gApi('POST',SHEETS,{properties:{title:'Checklist de Campo EB',locale:'pt_BR'},
+      const r=await gApi('POST',SHEETS,{properties:{title:PROFILES[profile].sheetTitle,locale:'pt_BR'},
         sheets:[{properties:{sheetId:0,title:'Dashboard'}},{properties:{sheetId:1,title:'Itens',gridProperties:{frozenRowCount:1}}}]});
       id=r.spreadsheetId;fresh=true;store.set(GSHEET_KEY,id);
     }
@@ -1029,12 +1060,16 @@ function initGoogle(){
 
 /* ============ Inicialização ============ */
 (function init(){
+  const qs0=new URLSearchParams(location.search);
+  setProfileKeys(qs0.get('tab')==='servico'?'servico':'campo');
   load();
   try{$('#activityName').value=store.get(ACTIVITY_KEY)||'';$('#activityDays').value=store.get(DAYS_KEY)||'';}catch(e){}
   const th=store.get(THEME_KEY);applyTheme(th==='light'||th==='dark'?th:'auto',false);
   const qs=new URLSearchParams(location.search);
   if(qs.get('filter')==='pending')pendingOnly=true;
   if(qs.get('tab')==='acoes')setTab('acoes');
+  if(qs.get('tab')==='servico'){currentTab='servico';$$('.nav-btn').forEach(b=>b.setAttribute('aria-selected',b.dataset.tab==='servico'));}
+  applyProfileUi();
   if(!$('#activityName').value&&!$('#activityDays').value)$('#activityBox').open=true;
   refreshAppStatus();
   initGoogle();
