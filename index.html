@@ -661,21 +661,22 @@ function renderChecklist(){
   let html='',shown=0;
   data.forEach(cat=>{
     let items=cat.items.filter(it=>(!q||lc(it.name).includes(q))&&(!statusFilter||it.status===statusFilter)&&(!pendingOnly||!settled(it)));
-    if(!items.length)return;
-    shown+=items.length;
+    if(!items.length&&(filtering||cat.items.length))return;
+    shown+=items.length+(items.length?0:1);
     items=items.map((it,idx)=>({it,idx})).sort((a,b)=>settled(a.it)-settled(b.it)||a.idx-b.idx).map(x=>x.it);
     const open=filtering||!cat.collapsed;
     const done=cat.items.filter(isDone).length;
     html+=`<section class="category ${open?'':'collapsed'}"><div class="cat-head">
       <button class="cat-toggle" data-action="toggle-cat" data-cat="${cat.id}" aria-expanded="${open}"><span class="chev" aria-hidden="true">▸</span><span class="cat-title">${esc(cat.name)}</span><span class="cat-count mono">${done}/${cat.items.length}</span></button>
       <button class="icon-btn bordered" data-action="bulk-cat" data-cat="${cat.id}" aria-label="Marcar a categoria ${esc(cat.name)} inteira" title="Marcar categoria inteira">⚡</button></div>
-      <div class="cat-body">${items.map(it=>itemHtml(cat,it)).join('')}</div></section>`;
+      <div class="cat-body">${items.map(it=>itemHtml(cat,it)).join('')}${filtering?'':`<button class="add-btn" data-action="add-item" data-cat="${cat.id}">+ Adicionar item em ${esc(cat.name)}</button>`}</div></section>`;
   });
   if(!shown){
     let h='Nenhum item encontrado',p='Tente outra palavra ou limpe os filtros.';
     if(!data.some(c=>c.items.length)){h='Sua lista está vazia';p='Abra a aba Ações e toque em “Restaurar padrão”, ou adicione uma categoria.';}
     else if(pendingOnly&&!q&&!statusFilter){h='Nada pendente 🎉';p='Tudo que precisava de atenção já está resolvido. Confira o progresso lá em cima.';}
-    html=`<div class="empty" style="grid-column:1/-1">${EMPTY_SVG}<h3>${h}</h3><p>${p}</p></div>`;
+    const addQ=(q&&data.length)?`<button class="btn primary" data-action="add-search" style="margin-top:14px">+ Adicionar “${esc($('#searchInput').value.trim())}”</button>`:'';
+    html=`<div class="empty" style="grid-column:1/-1">${EMPTY_SVG}<h3>${h}</h3><p>${p}</p>${addQ}</div>`;
   }
   $('#catList').innerHTML=html;
 }
@@ -781,8 +782,16 @@ const handlers={
     const c=findCat(el.dataset.cat);if(!c)return;
     const v=await askInput({title:'Novo item',label:`Em ${c.name}`,placeholder:'Nome do item',okText:'Adicionar'});
     if(!v)return;
-    const it=mkItem(v);it.defKey=null;c.items.push(it);expanded.add(it.id);save();
-    $('#manageList').dataset.built='';render();toast(`“${v}” adicionado`);
+    const it=mkItem(v);it.defKey=null;
+    mutate(`“${v}” adicionado em ${c.name}`,()=>{c.items.push(it);c.collapsed=false;expanded.add(it.id);});
+    $('#manageList').dataset.built='';renderManage();
+  },
+  async 'add-search'(){
+    const name=$('#searchInput').value.trim();if(!name||!data.length)return;
+    const cid=await askChoice({title:`Adicionar “${name}” em qual categoria?`,options:data.map(c=>({value:c.id,label:c.name}))});
+    const c=cid&&findCat(cid);if(!c)return;
+    const it=mkItem(name);it.defKey=null;c.items.push(it);expanded.add(it.id);c.collapsed=false;save();
+    $('#searchInput').value='';$('#manageList').dataset.built='';render();toast(`“${name}” adicionado em ${c.name}`);
   },
   async 'add-cat'(){
     const v=await askInput({title:'Nova categoria',label:'Nome',placeholder:'Ex: Ferramentas',okText:'Criar'});

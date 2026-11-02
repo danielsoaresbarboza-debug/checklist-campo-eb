@@ -2,7 +2,7 @@
    Estratégia: app shell em cache (funciona 100% offline no campo).
    Navegação: rede primeiro (pega versão nova quando há sinal), com limite de 2,5 s
    e fallback imediato para o cache — sem travar em sinal ruim. */
-const CACHE = 'checklist-eb-v4';
+const CACHE = 'checklist-eb-v5';
 const SHELL = [
   './',
   'index.html',
