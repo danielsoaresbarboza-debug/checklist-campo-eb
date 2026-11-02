@@ -1,0 +1,30 @@
+{
+  "id": "./",
+  "name": "Checklist de Campo EB",
+  "short_name": "Campo EB",
+  "description": "Checklist de material para saídas de campo: o que levar, o que já está no quartel e em qual bagagem cada item foi guardado. Funciona offline.",
+  "lang": "pt-BR",
+  "dir": "ltr",
+  "start_url": "./?source=pwa",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "portrait",
+  "background_color": "#11140D",
+  "theme_color": "#11140D",
+  "categories": ["productivity", "utilities"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    {
+      "name": "Só pendências",
+      "short_name": "Pendências",
+      "description": "Abrir mostrando apenas o que falta empacotar",
+      "url": "./?filter=pending&source=shortcut",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    }
+  ]
+}

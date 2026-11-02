@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Checklist de Campo · EB</title>
+<meta name="description" content="Checklist de material para saídas de campo. Funciona offline.">
+<meta name="color-scheme" content="dark light">
+<meta name="theme-color" content="#11140D" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#F4F2E8" media="(prefers-color-scheme: light)">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Campo EB">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<script>
+/* aplica o tema salvo antes de pintar (evita flash) */
+try{var t=localStorage.getItem('checklistCampoEB_theme_v1');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t);}catch(e){}
+</script>
+<style>
+/* ============ Tokens — escuro (padrão) ============ */
+:root{
+  --bg:#11140D; --surface:#1A1F14; --surface-2:#232A1B; --line:#6A7558; --line-soft:#343C2A;
+  --text:#EEEBDD; --muted:#A9B08F; --focus:#8EC9F0;
+  --casa:#E8B84C;    --casa-bg:#3F3516;
+  --quartel:#8FC163; --quartel-bg:#26381A;
+  --comprar:#F2866A; --comprar-bg:#43231A;
+  --nao:#A9B08F;     --nao-bg:#2B3022;
+  --mala:#E8A05A;    --mala-bg:#432C16;
+  --mochila:#BCA2E4; --mochila-bg:#33284A;
+  --caixa:#E8E8E2;   --caixa-bg:#3A3D36;
+  --comigo:#74B8DA;  --comigo-bg:#1E3442;
+  --touch:48px; --gutter:16px; --nav-h:60px;
+  --safe-t:env(safe-area-inset-top,0px); --safe-b:env(safe-area-inset-bottom,0px);
+  --shadow:0 6px 24px rgba(0,0,0,.45);
+}
+/* ============ Claro: automático pelo sistema ============ */
+@media (prefers-color-scheme: light){
+  :root:not([data-theme="dark"]){
+    --bg:#F4F2E8; --surface:#FFFFFF; --surface-2:#ECE9DA; --line:#7A7660; --line-soft:#D6D2BD;
+    --text:#1B1F14; --muted:#555B46; --focus:#0B5FA5;
+    --casa:#7A5800;    --casa-bg:#F6E7BC;
+    --quartel:#2D6A1A; --quartel-bg:#DDEFD0;
+    --comprar:#A23618; --comprar-bg:#F8DDD3;
+    --nao:#555B46;     --nao-bg:#E4E2D4;
+    --mala:#8A4A0A;    --mala-bg:#F7DEC3;
+    --mochila:#5A3C8C; --mochila-bg:#E6DDF3;
+    --caixa:#262826;   --caixa-bg:#DADBD3;
+    --comigo:#1B5C7C;  --comigo-bg:#D3E8F2;
+    --shadow:0 6px 24px rgba(40,40,20,.18);
+  }
+}
+/* ============ Claro: escolha manual ============ */
+:root[data-theme="light"]{
+  --bg:#F4F2E8; --surface:#FFFFFF; --surface-2:#ECE9DA; --line:#7A7660; --line-soft:#D6D2BD;
+  --text:#1B1F14; --muted:#555B46; --focus:#0B5FA5;
+  --casa:#7A5800;    --casa-bg:#F6E7BC;
+  --quartel:#2D6A1A; --quartel-bg:#DDEFD0;
+  --comprar:#A23618; --comprar-bg:#F8DDD3;
+  --nao:#555B46;     --nao-bg:#E4E2D4;
+  --mala:#8A4A0A;    --mala-bg:#F7DEC3;
+  --mochila:#5A3C8C; --mochila-bg:#E6DDF3;
+  --caixa:#262826;   --caixa-bg:#DADBD3;
+  --comigo:#1B5C7C;  --comigo-bg:#D3E8F2;
+  --shadow:0 6px 24px rgba(40,40,20,.18);
+}
+
+/* ============ Base ============ */
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{-webkit-text-size-adjust:100%;color-scheme:dark light}
+body{
+  margin:0; background:var(--bg); color:var(--text);
+  font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  font-size:clamp(.9375rem,.88rem + .3vw,1.0625rem); line-height:1.35;
+  min-height:100dvh; overscroll-behavior-y:contain;
+}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer;border:0;background:none;padding:0;touch-action:manipulation}
+[hidden]{display:none!important}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px;border-radius:6px}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-variant-numeric:tabular-nums}
+
+/* ============ Casca: barra inferior (celular) → lateral (tablet/notebook) ============ */
+.app{min-height:100dvh;display:flex;flex-direction:column}
+.content{flex:1;width:100%;max-width:1200px;margin:0 auto;
+  padding:0 var(--gutter) calc(var(--nav-h) + var(--safe-b) + 32px)}
+.appbar{display:flex;align-items:center;gap:12px;padding:calc(var(--safe-t) + 14px) 0 12px}
+.appbar img{width:40px;height:40px;border-radius:10px;flex:0 0 auto}
+.appbar h1{margin:0;font-size:clamp(1.25rem,1rem + 1.2vw,1.75rem);font-weight:800;letter-spacing:.01em;line-height:1.1}
+.appbar small{display:block;color:var(--muted);font-size:.75rem;letter-spacing:.14em;text-transform:uppercase;font-weight:700}
+
+.nav{position:fixed;left:0;right:0;bottom:0;z-index:40;display:flex;
+  background:var(--surface);border-top:1px solid var(--line-soft);padding-bottom:var(--safe-b)}
+.nav-btn{flex:1;min-height:var(--nav-h);display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:2px;color:var(--muted);font-size:.75rem;font-weight:700;position:relative}
+.nav-btn .ico{font-size:1.35rem;line-height:1}
+.nav-btn[aria-selected="true"]{color:var(--casa)}
+.nav-btn[aria-selected="true"]::before{content:"";position:absolute;top:0;left:25%;right:25%;height:3px;border-radius:0 0 3px 3px;background:var(--casa)}
+
+@media (min-width:906px){
+  .app{flex-direction:row}
+  .nav{position:sticky;top:0;height:100dvh;width:96px;flex:0 0 96px;flex-direction:column;justify-content:flex-start;
+    gap:6px;padding:calc(var(--safe-t) + 24px) 6px 0;border-top:0;border-right:1px solid var(--line-soft)}
+  .nav-btn{flex:0 0 auto;min-height:72px;border-radius:12px}
+  .nav-btn[aria-selected="true"]{background:var(--surface-2)}
+  .nav-btn[aria-selected="true"]::before{top:20%;bottom:20%;left:0;right:auto;width:3px;height:auto;border-radius:0 3px 3px 0}
+  .content{padding-bottom:48px}
+}
+
+.panel{display:none}
+.panel.active{display:block}
+@media (hover:hover){ .nav-btn:hover{color:var(--text)} }
+
+/* ============ Cartões de apoio ============ */
+.card{background:var(--surface);border:1px solid var(--line-soft);border-radius:14px;padding:14px}
+.card h2,.card h3{margin:0 0 8px;font-size:.8125rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);font-weight:800}
+.card p{margin:0 0 10px;color:var(--muted);font-size:.875rem}
+.stack{display:flex;flex-direction:column;gap:12px}
+
+details.activity{background:var(--surface);border:1px solid var(--line-soft);border-radius:14px}
+details.activity summary{min-height:var(--touch);display:flex;align-items:center;gap:10px;padding:0 14px;cursor:pointer;list-style:none;font-weight:700}
+details.activity summary::-webkit-details-marker{display:none}
+details.activity summary .sum-text{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+details.activity summary .sum-text span{color:var(--muted);font-weight:500}
+details.activity summary::after{content:"▾";color:var(--muted);transition:transform .15s}
+details.activity[open] summary::after{transform:rotate(180deg)}
+.activity-body{padding:0 14px 14px;display:grid;gap:10px;grid-template-columns:1fr}
+@media (min-width:600px){.activity-body{grid-template-columns:2fr 1fr}}
+
+.field{display:flex;flex-direction:column;gap:6px}
+.field>span{font-size:.75rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:700}
+.field input,.search input{width:100%;min-height:var(--touch);padding:0 12px;border-radius:10px;
+  background:var(--surface-2);border:1.5px solid var(--line);color:var(--text)}
+.field input::placeholder,.search input::placeholder{color:var(--muted);opacity:.85}
+
+/* ============ Progresso ============ */
+.progress{margin-top:12px}
+.p-top{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:8px}
+.p-label{font-size:.8125rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);font-weight:800}
+.p-num{font-size:1.75rem;font-weight:800;line-height:1}
+.p-num small{font-size:.9rem;color:var(--muted);font-weight:700}
+.bar{height:12px;border-radius:99px;background:var(--surface-2);border:1px solid var(--line-soft);overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--quartel);transition:width .3s ease}
+.p-bags{display:flex;flex-wrap:wrap;gap:6px 10px;margin-top:10px}
+.p-bag{display:inline-flex;align-items:center;gap:6px;font-size:.8125rem;font-weight:700;padding:4px 10px;border-radius:99px;border:1px solid}
+.p-bag.mala{color:var(--mala);background:var(--mala-bg);border-color:var(--mala)}
+.p-bag.mochila{color:var(--mochila);background:var(--mochila-bg);border-color:var(--mochila)}
+.p-bag.caixa{color:var(--caixa);background:var(--caixa-bg);border-color:var(--caixa)}
+.p-msg{margin:10px 0 0;font-size:.875rem;color:var(--muted)}
+.progress.all-done{border-color:var(--quartel)}
+.progress.all-done .p-msg{color:var(--quartel);font-weight:800}
+
+/* ============ Filtros (controle segmentado de status) ============ */
+.chips{display:flex;gap:8px;overflow-x:auto;padding:12px 0 4px;scrollbar-width:none;scroll-snap-type:x proximity}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:0 0 auto;min-height:var(--touch);display:inline-flex;align-items:center;gap:8px;padding:0 14px;border-radius:99px;
+  border:1.5px solid var(--line);background:var(--surface);color:var(--muted);font-weight:700;font-size:.8125rem;scroll-snap-align:start;white-space:nowrap}
+.chip .n{font-size:.95rem;color:var(--text)}
+.chip[aria-pressed="true"]{color:var(--chip-c);border-color:var(--chip-c);background:var(--chip-bg)}
+.chip[aria-pressed="true"] .n{color:var(--chip-c)}
+.chip[data-s="indefinido"]{--chip-c:var(--text);--chip-bg:var(--surface-2)}
+.chip[data-s="casa"]{--chip-c:var(--casa);--chip-bg:var(--casa-bg)}
+.chip[data-s="quartel"]{--chip-c:var(--quartel);--chip-bg:var(--quartel-bg)}
+.chip[data-s="comprar"]{--chip-c:var(--comprar);--chip-bg:var(--comprar-bg)}
+.chip[data-s="nao"]{--chip-c:var(--nao);--chip-bg:var(--nao-bg)}
+
+/* ============ Busca persistente + pendências ============ */
+.toolbar{position:sticky;top:0;z-index:20;background:var(--bg);padding:8px 0;margin-top:4px;display:flex;gap:8px;
+  padding-top:calc(var(--safe-t) + 8px)}
+.search{flex:1;position:relative;min-width:0}
+.search input{padding-left:40px}
+.search svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none}
+.toggle{flex:0 0 auto;min-height:var(--touch);padding:0 14px;border-radius:10px;border:1.5px solid var(--line);background:var(--surface);
+  color:var(--muted);font-weight:800;font-size:.8125rem;display:inline-flex;align-items:center;gap:6px}
+.toggle[aria-pressed="true"]{background:var(--casa-bg);border-color:var(--casa);color:var(--casa)}
+
+/* ============ Categorias e itens ============ */
+.cats{display:grid;gap:14px;grid-template-columns:1fr;align-items:start;margin-top:6px}
+@media (min-width:600px){.cats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (min-width:1240px){.cats{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.cat-head{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.cat-toggle{flex:1;min-width:0;min-height:var(--touch);display:flex;align-items:center;gap:8px;text-align:left}
+.cat-toggle .chev{color:var(--muted);transition:transform .15s;flex:0 0 auto}
+.cat-toggle[aria-expanded="true"] .chev{transform:rotate(90deg)}
+.cat-title{font-size:.8125rem;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cat-count{font-size:.75rem;color:var(--muted);flex:0 0 auto}
+.icon-btn{min-width:var(--touch);min-height:var(--touch);display:inline-flex;align-items:center;justify-content:center;border-radius:10px;color:var(--muted);font-size:1.1rem}
+.icon-btn.bordered{border:1.5px solid var(--line);background:var(--surface)}
+.cat-body{display:flex;flex-direction:column;gap:8px}
+.category.collapsed .cat-body{display:none}
+
+.item{background:var(--surface);border:1px solid var(--line-soft);border-radius:12px;padding:10px;display:flex;flex-direction:column;gap:8px}
+.item-r1{display:grid;grid-template-columns:var(--touch) 1fr var(--touch);align-items:center;gap:4px}
+.item-name{text-align:center;font-weight:700;font-size:1.0625rem;overflow-wrap:anywhere;line-height:1.2}
+.qty{min-width:var(--touch);min-height:var(--touch);border-radius:10px;border:1.5px solid var(--line);background:var(--surface-2);color:var(--muted);font-weight:800;font-size:.9rem}
+.qty.multi{color:var(--comigo);border-color:var(--comigo);background:var(--comigo-bg)}
+.seg{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.sbtn{min-height:var(--touch);border:1.5px solid var(--line);border-radius:10px;background:var(--surface-2);color:var(--muted);
+  font-weight:800;font-size:.8125rem;padding:0 2px}
+.sbtn[aria-pressed="true"][data-s="casa"]{background:var(--casa-bg);border-color:var(--casa);color:var(--casa)}
+.sbtn[aria-pressed="true"][data-s="quartel"]{background:var(--quartel-bg);border-color:var(--quartel);color:var(--quartel)}
+.sbtn[aria-pressed="true"][data-s="comprar"]{background:var(--comprar-bg);border-color:var(--comprar);color:var(--comprar)}
+.sbtn[aria-pressed="true"][data-s="nao"]{background:var(--nao-bg);border-color:var(--nao);color:var(--nao)}
+.bags{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.bbtn{min-height:var(--touch);border:1.5px solid var(--line);border-radius:10px;background:var(--surface-2);color:var(--muted);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;font-weight:800;font-size:.6875rem;line-height:1.15;padding:2px}
+.bbtn .ico{font-size:1.15rem;line-height:1.1}
+.bbtn[aria-pressed="true"][data-bag="mala"]{background:var(--mala-bg);border-color:var(--mala);color:var(--mala)}
+.bbtn[aria-pressed="true"][data-bag="mochila"]{background:var(--mochila-bg);border-color:var(--mochila);color:var(--mochila)}
+.bbtn[aria-pressed="true"][data-bag="caixa"]{background:var(--caixa-bg);border-color:var(--caixa);color:var(--caixa)}
+.bbtn[aria-pressed="true"][data-bag="comigo"]{background:var(--comigo-bg);border-color:var(--comigo);color:var(--comigo)}
+.bbtn[aria-disabled="true"]{opacity:.38}
+
+.item.compact{padding:0;overflow:hidden}
+.compact-btn{width:100%;min-height:var(--touch);display:flex;align-items:center;gap:10px;padding:6px 12px;text-align:left}
+.compact-btn .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted);text-decoration:line-through;text-decoration-thickness:1px}
+.compact-btn .bg{font-size:1rem;letter-spacing:2px;flex:0 0 auto}
+.compact-btn .q{font-size:.75rem;font-weight:800;color:var(--comigo)}
+.compact-btn .chev{color:var(--muted);flex:0 0 auto}
+.badge{flex:0 0 auto;font-size:.6875rem;font-weight:800;padding:4px 8px;border-radius:6px;border:1px solid;text-transform:uppercase;letter-spacing:.03em}
+.badge.casa{color:var(--casa);background:var(--casa-bg);border-color:var(--casa)}
+.badge.quartel{color:var(--quartel);background:var(--quartel-bg);border-color:var(--quartel)}
+.badge.nao{color:var(--nao);background:var(--nao-bg);border-color:var(--nao)}
+.badge.comprar{color:var(--comprar);background:var(--comprar-bg);border-color:var(--comprar)}
+
+.add-btn{width:100%;min-height:var(--touch);border:1.5px dashed var(--line);border-radius:12px;color:var(--muted);font-weight:700;font-size:.875rem}
+
+/* ============ Estado vazio educativo ============ */
+.empty{text-align:center;padding:36px 16px;color:var(--muted)}
+.empty svg{width:84px;height:84px;color:var(--line);margin-bottom:8px}
+.empty h3{margin:0 0 6px;color:var(--text);font-size:1.05rem}
+.empty p{margin:0 auto;max-width:34ch;font-size:.9rem}
+
+/* ============ Botões gerais ============ */
+.btn{min-height:var(--touch);padding:0 16px;border-radius:12px;border:1.5px solid var(--line);background:var(--surface);color:var(--text);
+  font-weight:700;font-size:.9rem;display:inline-flex;align-items:center;justify-content:center;gap:8px;text-align:center}
+.btn:active{transform:scale(.98)}
+.btn.primary{background:var(--casa-bg);border-color:var(--casa);color:var(--casa)}
+.btn.danger{color:var(--comprar);border-color:var(--comprar)}
+.btn.ghost{background:transparent}
+.btn.full{width:100%}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.row>.btn{flex:1 1 150px}
+@media (hover:hover){
+  .btn:hover,.chip:hover,.toggle:hover,.sbtn:hover,.bbtn:hover,.qty:hover,.add-btn:hover{border-color:var(--text)}
+  .compact-btn:hover{background:var(--surface-2)}
+}
+
+.acoes-grid{display:grid;gap:14px;grid-template-columns:1fr}
+@media (min-width:906px){.acoes-grid{grid-template-columns:repeat(2,minmax(0,1fr));align-items:start}.acoes-grid .wide{grid-column:1/-1}}
+.theme-seg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:6px}
+.theme-seg button{min-height:var(--touch);border:1.5px solid var(--line);border-radius:10px;background:var(--surface-2);color:var(--muted);font-weight:800;font-size:.8125rem}
+.theme-seg button[aria-pressed="true"]{background:var(--casa-bg);border-color:var(--casa);color:var(--casa)}
+
+details.edit{background:var(--surface);border:1px solid var(--line-soft);border-radius:14px}
+details.edit>summary{min-height:var(--touch);display:flex;align-items:center;padding:0 14px;cursor:pointer;font-weight:800;list-style:none;
+  text-transform:uppercase;font-size:.8125rem;letter-spacing:.1em;color:var(--muted)}
+details.edit>summary::-webkit-details-marker{display:none}
+details.edit>summary::after{content:"▾";margin-left:auto}
+details.edit[open]>summary::after{transform:rotate(180deg)}
+.edit-body{padding:0 14px 14px;display:grid;gap:14px;grid-template-columns:1fr}
+@media (min-width:906px){.edit-body{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.edit-cat{display:flex;flex-direction:column;gap:6px}
+.edit-cat-head{display:flex;gap:6px}
+.edit-cat-head input{flex:1;min-width:0;min-height:var(--touch);padding:0 12px;border-radius:10px;background:var(--surface-2);border:1.5px solid var(--line);font-weight:800;text-transform:uppercase;letter-spacing:.05em;font-size:.8125rem;color:var(--text)}
+.edit-item{display:flex;gap:6px}
+.edit-item input{flex:1;min-width:0;min-height:var(--touch);padding:0 12px;border-radius:10px;background:var(--surface-2);border:1.5px solid var(--line);color:var(--text)}
+.edit-item .del,.edit-cat-head .del{color:var(--comprar);border:1.5px solid var(--line);background:var(--surface)}
+
+/* ============ Toast com Desfazer + diálogo único ============ */
+.toast{position:fixed;left:50%;bottom:calc(var(--nav-h) + var(--safe-b) + 14px);transform:translate(-50%,24px);opacity:0;pointer-events:none;
+  z-index:60;width:min(92vw,460px);display:flex;align-items:center;gap:8px;padding:4px 6px 4px 16px;border-radius:14px;
+  background:var(--text);color:var(--bg);box-shadow:var(--shadow);transition:opacity .2s,transform .2s}
+.toast.show{opacity:1;transform:translate(-50%,0);pointer-events:auto}
+.toast .msg{flex:1;font-weight:700;font-size:.9rem;padding:10px 0}
+.toast button{min-height:var(--touch);padding:0 14px;border-radius:10px;font-weight:800;color:var(--bg);text-decoration:underline}
+@media (min-width:906px){.toast{bottom:24px;left:calc(50% + 48px)}}
+
+dialog{border:1px solid var(--line);border-radius:16px;background:var(--surface);color:var(--text);padding:18px;width:min(420px,92vw);box-shadow:var(--shadow)}
+dialog::backdrop{background:rgba(0,0,0,.6)}
+dialog h2{margin:0 0 12px;font-size:1rem}
+.dlg-actions{display:flex;gap:8px;margin-top:14px}
+.dlg-actions .btn{flex:1}
+.choices{display:flex;flex-direction:column;gap:8px}
+.choices .btn{justify-content:flex-start}
+.choices .btn[data-v="casa"]{color:var(--casa);border-color:var(--casa)}
+.choices .btn[data-v="quartel"]{color:var(--quartel);border-color:var(--quartel)}
+.choices .btn[data-v="comprar"]{color:var(--comprar);border-color:var(--comprar)}
+.choices .btn[data-v="nao"]{color:var(--nao);border-color:var(--nao)}
+
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <nav class="nav" role="tablist" aria-label="Seções do app">
+    <button class="nav-btn" role="tab" id="tab-checklist" aria-selected="true" aria-controls="panel-checklist" data-action="tab" data-tab="checklist"><span class="ico" aria-hidden="true">📋</span>Checklist</button>
+    <button class="nav-btn" role="tab" id="tab-acoes" aria-selected="false" aria-controls="panel-acoes" data-action="tab" data-tab="acoes"><span class="ico" aria-hidden="true">⚙️</span>Ações</button>
+  </nav>
+
+  <div class="content">
+    <header class="appbar">
+      <img src="icons/icon-192.png" alt="" width="40" height="40">
+      <div><small>EB · Campo</small><h1>Checklist de Material</h1></div>
+    </header>
+
+    <main>
+      <!-- ============ CHECKLIST ============ -->
+      <section id="panel-checklist" class="panel active" role="tabpanel" aria-labelledby="tab-checklist">
+
+        <details class="activity" id="activityBox">
+          <summary><span aria-hidden="true">📝</span><span class="sum-text" id="activitySummary">Atividade</span></summary>
+          <div class="activity-body">
+            <label class="field"><span>Nome da atividade</span><input id="activityName" type="text" placeholder="Ex: Exercício de campo — Serra do Mar" autocomplete="off"></label>
+            <label class="field"><span>Dias</span><input id="activityDays" type="number" min="1" inputmode="numeric" placeholder="Ex: 5"></label>
+          </div>
+        </details>
+
+        <div class="card progress" id="progressCard" aria-live="polite">
+          <div class="p-top"><span class="p-label">Empacotado</span><span class="p-num mono" id="pNum">0<small> / 0</small></span></div>
+          <div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="Progresso do empacotamento" id="pBar"><i id="pFill"></i></div>
+          <div class="p-bags" id="pBags"></div>
+          <p class="p-msg" id="pMsg"></p>
+        </div>
+
+        <div class="chips" id="chips" role="group" aria-label="Filtrar por status"></div>
+
+        <div class="toolbar">
+          <div class="search">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+            <input id="searchInput" type="search" placeholder="Buscar item…" aria-label="Buscar item" autocomplete="off">
+          </div>
+          <button class="toggle" id="btnPending" data-action="pending" aria-pressed="false"><span aria-hidden="true">👁</span> Pendências</button>
+        </div>
+
+        <div class="cats" id="catList"></div>
+      </section>
+
+      <!-- ============ AÇÕES ============ -->
+      <section id="panel-acoes" class="panel" role="tabpanel" aria-labelledby="tab-acoes">
+        <div class="acoes-grid">
+
+          <div class="card">
+            <h2>📲 O app</h2>
+            <p id="installStatus">Abra pelo ícone na tela inicial pra usar como app, mesmo sem internet.</p>
+            <button class="btn primary full" id="btnInstall" data-action="install" hidden>Instalar no aparelho</button>
+            <p id="iosHint" hidden>No iPhone/iPad: toque em <b>Compartilhar</b> (quadrado com seta) e depois em <b>Adicionar à Tela de Início</b>.</p>
+            <h3 style="margin-top:12px">Tema</h3>
+            <div class="theme-seg" role="group" aria-label="Tema">
+              <button data-action="theme" data-theme-v="auto" aria-pressed="true">Automático</button>
+              <button data-action="theme" data-theme-v="light" aria-pressed="false">Claro</button>
+              <button data-action="theme" data-theme-v="dark" aria-pressed="false">Escuro</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <h2>🔢 Quantidades</h2>
+            <p>Preencha “Dias” na aba Checklist e toque abaixo: itens de uso diário (meias, cueca) recebem a quantidade igual ao nº de dias.</p>
+            <button class="btn primary full" data-action="suggest-qty">Sugerir quantidades pelos dias</button>
+          </div>
+
+          <div class="card">
+            <h2>🧰 Ferramentas</h2>
+            <div class="row">
+              <button class="btn" data-action="nova-saida">🔄 Nova saída</button>
+              <button class="btn" data-action="limpar">🧹 Limpar tudo</button>
+            </div>
+            <p style="margin-top:10px"><b>Nova saída</b> desmarca o que já foi empacotado. <b>Limpar tudo</b> volta todos os itens para “sem definir”. Os dois têm “Desfazer”.</p>
+            <div class="row"><button class="btn ghost" data-action="add-cat">+ Categoria</button><button class="btn ghost" data-action="restaurar">Restaurar padrão</button></div>
+          </div>
+
+          <div class="card">
+            <h2>📤 Compartilhar</h2>
+            <p>Gera a lista com o status de cada item, quantidade e onde foi guardado.</p>
+            <div class="row"><button class="btn primary" data-action="copiar">📋 Copiar lista</button><button class="btn primary" data-action="whats">📲 WhatsApp</button></div>
+          </div>
+
+          <div class="card wide">
+            <h2>💾 Backup</h2>
+            <p>Seus dados ficam só neste aparelho. Baixe um backup antes de trocar de celular ou limpar o navegador.</p>
+            <div class="row"><button class="btn" data-action="backup-down">⬇️ Baixar backup</button><button class="btn" data-action="backup-up">⬆️ Importar backup</button></div>
+            <input type="file" id="backupFile" accept="application/json,.json" hidden>
+          </div>
+
+          <details class="edit wide">
+            <summary>✏️ Editar itens e categorias</summary>
+            <div class="edit-body" id="manageList"></div>
+          </details>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"><span class="msg"></span><button type="button" hidden></button></div>
+
+<dialog id="dlg" aria-labelledby="dlgTitle">
+  <form method="dialog" id="dlgForm">
+    <h2 id="dlgTitle"></h2>
+    <div id="dlgBody"></div>
+    <div class="dlg-actions">
+      <button type="button" class="btn ghost" id="dlgCancel">Cancelar</button>
+      <button type="submit" class="btn primary" id="dlgOk">Salvar</button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+'use strict';
+/* ============================================================
+   Dados padrão — [{name, items:[[nome, {qty?, highUse?, comigo?}]]}]
+   ============================================================ */
+const DEFAULTS = [{"name": "Higiene Pessoal", "items": [["Shampoo"], ["Sabonete"], ["Repelente de Insetos"], ["Pente"], ["Desodorante"], ["Escova de Dente"], ["Pasta de Dente"], ["Protetor Solar"], ["Batom de Cacau"], ["Barbeador Elétrico"], ["Cortador de Unha"], ["Álcool"], ["Papel Higiênico"]]}, {"name": "Roupas Íntimas & Meias", "items": [["Cueca", {"highUse": true}], ["Meia Branca", {"highUse": true}], ["Meia de Coturno", {"highUse": true}], ["Meia VO", {"highUse": true}]]}, {"name": "Uniformes & Vestuário", "items": [["Camiseta Camuflada"], ["Camiseta de Passeio"], ["Camiseta TFM"], ["Calça de Passeio"], ["Calça Camuflada"], ["Short de Passeio"], ["Short TFM"], ["Camiseta de Dormir"], ["Luva"], ["Boina"], ["Gandola"], ["Cinto VO"], ["Cinto de Passeio"], ["Chapéu Tático"], ["Soutaches"], ["Gorro Velame"]]}, {"name": "Calçados", "items": [["Tênis de TFM"], ["Tênis de Passeio"], ["Coturno"], ["Chinelo"]]}, {"name": "Eletrônicos", "items": [["Celular", {"comigo": true}], ["Carregador de Celular"], ["PowerBank"], ["Carregador de Carro"], ["Notebook"], ["Carregador de Notebook"], ["Tablet"], ["Mouse"], ["Pilha"], ["Pen-drive"], ["Bolsa de Cabos"], ["Adaptador em \"T\""], ["Extensão de Tomada"], ["Relógio", {"comigo": true}], ["Carregador do Relógio"], ["Fone de Ouvido", {"comigo": true}]]}, {"name": "Diversos", "items": [["Óculos de Grau"], ["Óculos Escuros", {"comigo": true}], ["Bloco de Anotações"]]}, {"name": "Medicamentos", "items": [["Tylenol (Comprimido)"], ["Allegra (Comprimido)"]]}, {"name": "Cama & Dormir", "items": [["Protetor de Colchão"], ["Lençol de Cama"], ["Saco de Dormir"], ["Cobertor"], ["Travesseiro"], ["Fronha"]]}, {"name": "Lavanderia & Sacos", "items": [["Detergente"], ["Sabão em Pó"], ["Saco Plástico para Lavar Roupa"], ["Sacolas de Mercado", {"qty": 2}], ["Saco de Lixo para Roupa Suja"]]}];
+
+const KEY='checklistCampoEB_v1', REMOVED_KEY='checklistCampoEB_removed_v1',
+      ACTIVITY_KEY='checklistCampoEB_activity_v1', DAYS_KEY='checklistCampoEB_days_v1', THEME_KEY='checklistCampoEB_theme_v1';
+const STATUSES=['indefinido','casa','quartel','comprar','nao'];
+const STATUS_LABEL={indefinido:'Sem definir',casa:'Levar de casa',quartel:'Já no quartel',comprar:'Comprar',nao:'Não levo'};
+const BAGS={mala:{icon:'🧳',label:'Mala',field:'emMala'},mochila:{icon:'🎒',label:'Mochila',field:'emMochila'},caixa:{icon:'📦',label:'Caixa Preta',field:'emCaixa'}};
+
+const $=(s,r=document)=>r.querySelector(s);
+const $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const lc=s=>String(s||'').trim().toLowerCase();
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid=()=>Math.random().toString(36).slice(2,9)+Date.now().toString(36).slice(-3);
+const vib=(ms=12)=>{try{navigator.vibrate&&navigator.vibrate(ms);}catch(e){}};
+const store={
+  get(k){try{return localStorage.getItem(k);}catch(e){return null;}},
+  set(k,v){try{localStorage.setItem(k,v);return true;}catch(e){return false;}}
+};
+
+/* ============ Modelo ============ */
+function mkItem(name,o={}){
+  return {id:uid(),name,defKey:name,status:'indefinido',emMala:false,emMochila:false,emCaixa:false,
+          comigo:!!o.comigo,qty:o.qty||1,highUse:!!o.highUse};
+}
+function defaultData(){
+  return DEFAULTS.map(c=>({id:uid(),name:c.name,collapsed:false,items:c.items.map(([n,o])=>mkItem(n,o))}));
+}
+function normalize(cats){
+  const defNames=new Set(DEFAULTS.flatMap(c=>c.items.map(([n])=>lc(n))));
+  cats.forEach(c=>{
+    if(!c.id)c.id=uid();
+    if(typeof c.collapsed!=='boolean')c.collapsed=false;
+    if(!Array.isArray(c.items))c.items=[];
+    c.items.forEach(i=>{
+      if(!i.id)i.id=uid();
+      if(typeof i.emMala!=='boolean')i.emMala=(i.levado===true);
+      delete i.levado;
+      ['emMochila','emCaixa','comigo','highUse'].forEach(k=>{if(typeof i[k]!=='boolean')i[k]=false;});
+      if(!Number.isFinite(i.qty)||i.qty<1)i.qty=1;
+      if(!STATUSES.includes(i.status))i.status='indefinido';
+      if(i.defKey===undefined)i.defKey=defNames.has(lc(i.name))?i.name:null;
+    });
+  });
+  return cats;
+}
+let removedList=[];           // itens padrão que o usuário apagou (não voltam sozinhos)
+let data=[];
+let mergedAdded=0;
+
+function mergeDefaults(cats){
+  let added=0; const removed=new Set(removedList.map(lc));
+  DEFAULTS.forEach(dc=>{
+    let cat=cats.find(c=>lc(c.name)===lc(dc.name));
+    dc.items.forEach(([n,o])=>{
+      if(removed.has(lc(n)))return;
+      const exists=cats.some(c=>c.items.some(i=>lc(i.defKey||'')===lc(n)||lc(i.name)===lc(n)));
+      if(exists)return;
+      if(!cat){cat={id:uid(),name:dc.name,collapsed:false,items:[]};cats.push(cat);}
+      cat.items.push(mkItem(n,o)); added++;
+    });
+  });
+  return added;
+}
+function save(){
+  store.set(KEY,JSON.stringify(data));
+  store.set(REMOVED_KEY,JSON.stringify(removedList));
+}
+function load(){
+  try{removedList=JSON.parse(store.get(REMOVED_KEY)||'[]');if(!Array.isArray(removedList))removedList=[];}catch(e){removedList=[];}
+  const raw=store.get(KEY);
+  if(raw){
+    try{
+      data=normalize(JSON.parse(raw));
+      mergedAdded=mergeDefaults(data);
+      if(mergedAdded)save();
+      return;
+    }catch(e){ store.set(KEY+'_corrompido',raw); }
+  }
+  data=normalize(defaultData());
+}
+
+/* ============ Regras ============ */
+const isPacked=i=>!!(i.emMala||i.emMochila||i.emCaixa);
+const isDone=i=>(i.status==='casa'&&isPacked(i))||i.status==='quartel'||i.status==='nao';
+const expanded=new Set();                      // itens "tocados" ficam abertos até o usuário recolher
+const settled=i=>(isDone(i)&&!expanded.has(i.id))?1:0;
+let statusFilter=null, pendingOnly=false, currentTab='checklist';
+
+function findItem(id){for(const c of data){const it=c.items.find(x=>x.id===id);if(it)return {cat:c,item:it};}return null;}
+function findCat(id){return data.find(c=>c.id===id);}
+
+/* ============ Desfazer ============ */
+function snap(){return JSON.stringify({data,removedList});}
+function restoreSnap(s){const o=JSON.parse(s);data=o.data;removedList=o.removedList;save();render();}
+function mutate(msg,fn){
+  const s=snap(); fn(); save(); render(); vib(20);
+  toast(msg,{label:'Desfazer',fn:()=>{restoreSnap(s);toast('Desfeito');}});
+}
+
+/* ============ Toast ============ */
+let toastTimer;
+function toast(msg,act){
+  const el=$('#toast'),b=$('button',el);
+  $('.msg',el).textContent=msg;
+  if(act){b.hidden=false;b.textContent=act.label;b.onclick=()=>{hideToast();act.fn();};}
+  else{b.hidden=true;b.onclick=null;}
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(hideToast,act?7000:3500);
+}
+function hideToast(){$('#toast').classList.remove('show');}
+
+/* ============ Diálogo único (um overlay por vez) ============ */
+const dlg=$('#dlg'),dlgForm=$('#dlgForm'),dlgTitle=$('#dlgTitle'),dlgBody=$('#dlgBody'),dlgOk=$('#dlgOk'),dlgCancel=$('#dlgCancel');
+function askInput({title,label='',value='',type='text',okText='Salvar',placeholder=''}){
+  return new Promise(res=>{
+    if(dlg.open){res(null);return;}
+    dlgTitle.textContent=title;
+    dlgBody.innerHTML=`<label class="field"><span>${esc(label)}</span><input id="dlgField" type="${type}" ${type==='number'?'min="1" inputmode="numeric"':''} value="${esc(value)}" placeholder="${esc(placeholder)}" autocomplete="off"></label>`;
+    dlgOk.hidden=false;dlgOk.textContent=okText;
+    let result=null;
+    dlgForm.onsubmit=e=>{e.preventDefault();result=$('#dlgField').value.trim();dlg.close();};
+    dlgCancel.onclick=()=>dlg.close();
+    dlg.onclose=()=>{dlgForm.onsubmit=null;dlg.onclose=null;res(result);};
+    dlg.showModal();
+    setTimeout(()=>{const f=$('#dlgField');if(f){f.focus();f.select&&f.select();}},30);
+  });
+}
+function askChoice({title,options}){
+  return new Promise(res=>{
+    if(dlg.open){res(null);return;}
+    dlgTitle.textContent=title;
+    dlgBody.innerHTML='<div class="choices">'+options.map(o=>`<button type="button" class="btn" data-v="${o.value}">${esc(o.label)}</button>`).join('')+'</div>';
+    dlgOk.hidden=true;
+    let result=null;
+    $$('.choices .btn',dlgBody).forEach(b=>b.onclick=()=>{result=b.dataset.v;dlg.close();});
+    dlgForm.onsubmit=e=>e.preventDefault();
+    dlgCancel.onclick=()=>dlg.close();
+    dlg.onclose=()=>{dlgForm.onsubmit=null;dlg.onclose=null;res(result);};
+    dlg.showModal();
+  });
+}
+
+/* ============ Renderização ============ */
+const EMPTY_SVG='<svg viewBox="0 0 96 96" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="18" y="32" width="60" height="46" rx="10"/><path d="M36 32v-6a6 6 0 0 1 6-6h12a6 6 0 0 1 6 6v6"/><path d="M18 52h60"/><path d="M40 66l6 6 12-14"/></svg>';
+
+function focusKey(el){
+  if(!el||!el.dataset)return null;
+  const d=el.dataset;
+  if(!d.action)return null;
+  return `[data-action="${d.action}"]`+(d.item?`[data-item="${d.item}"]`:'')+(d.cat?`[data-cat="${d.cat}"]`:'')+(d.s?`[data-s="${d.s}"]`:'')+(d.bag?`[data-bag="${d.bag}"]`:'');
+}
+function render(){
+  const key=focusKey(document.activeElement);
+  renderSummary(); renderChecklist(); renderManage();
+  if(key){const el=$(key);if(el&&el!==document.activeElement)el.focus({preventScroll:true});}
+}
+
+function renderSummary(){
+  const counts={indefinido:0,casa:0,quartel:0,comprar:0,nao:0};
+  let toPack=0,packed=0,mala=0,mochila=0,caixa=0;
+  data.forEach(c=>c.items.forEach(i=>{
+    counts[i.status]++;
+    if(i.status==='casa'){toPack++;if(isPacked(i))packed++;}
+    if(i.emMala)mala++; if(i.emMochila)mochila++; if(i.emCaixa)caixa++;
+  }));
+  $('#chips').innerHTML=STATUSES.map(s=>`<button class="chip" data-action="filter" data-s="${s}" aria-pressed="${statusFilter===s}"><span class="n mono">${counts[s]}</span>${STATUS_LABEL[s]}</button>`).join('');
+  const pct=toPack?Math.round(packed/toPack*100):0;
+  $('#pNum').innerHTML=`${packed}<small> / ${toPack}</small>`;
+  $('#pFill').style.width=pct+'%';
+  const bar=$('#pBar');bar.setAttribute('aria-valuenow',pct);
+  $('#pBags').innerHTML=Object.entries({mala,mochila,caixa}).filter(([,n])=>n>0)
+    .map(([k,n])=>`<span class="p-bag ${k}"><span aria-hidden="true">${BAGS[k].icon}</span>${BAGS[k].label} <b class="mono">${n}</b></span>`).join('');
+  const card=$('#progressCard'),msg=$('#pMsg');
+  const allDone=toPack>0&&packed===toPack&&counts.indefinido===0;
+  card.classList.toggle('all-done',allDone);
+  if(allDone)msg.textContent='Tudo pronto! ✅ Tudo que sai de casa já está empacotado.';
+  else if(counts.indefinido>0)msg.textContent=`${counts.indefinido} ite${counts.indefinido>1?'ns':'m'} ainda sem status — toque em “Sem definir” pra ver só eles.`;
+  else if(toPack===0)msg.textContent='Nada marcado pra levar de casa.';
+  else msg.textContent=`Faltam ${toPack-packed} para empacotar.`;
+  $('#btnPending').setAttribute('aria-pressed',pendingOnly);
+  updateActivitySummary();
+}
+
+function itemHtml(cat,it){
+  const done=isDone(it), compact=done&&!expanded.has(it.id);
+  const ids=`data-cat="${cat.id}" data-item="${it.id}"`;
+  if(compact){
+    const badge=`<span class="badge ${it.status}">${it.status==='casa'?'Casa':it.status==='quartel'?'Quartel':'Não'}</span>`;
+    const bags=Object.entries(BAGS).filter(([,b])=>it[b.field]).map(([,b])=>b.icon).join('');
+    return `<div class="item compact"><button class="compact-btn" data-action="expand" ${ids} aria-expanded="false" aria-label="${esc(it.name)} — pronto. Toque para editar">
+      ${badge}<span class="nm">${esc(it.name)}</span>${it.qty>1?`<span class="q mono">×${it.qty}</span>`:''}<span class="bg" aria-hidden="true">${bags}</span><span class="chev" aria-hidden="true">▾</span></button></div>`;
+  }
+  const statusBtns=[['casa','Casa'],['quartel','Quartel'],['comprar','Comprar'],['nao','Não levo']]
+    .map(([s,l])=>`<button class="sbtn" data-action="status" data-s="${s}" ${ids} aria-pressed="${it.status===s}">${l}</button>`).join('');
+  let row3='';
+  if(it.status==='casa'||it.status==='quartel'||it.status==='comprar'){
+    const canPack=it.status==='casa';
+    const bagBtns=Object.entries(BAGS).map(([k,b])=>
+      `<button class="bbtn" data-action="bag" data-bag="${k}" ${ids} aria-pressed="${!!it[b.field]}" ${canPack?'':'aria-disabled="true"'}><span class="ico" aria-hidden="true">${b.icon}</span>${b.label}</button>`).join('');
+    row3=`<div class="bags" role="group" aria-label="Onde guardar ${esc(it.name)}">${bagBtns}<button class="bbtn" data-action="comigo" data-bag="comigo" ${ids} aria-pressed="${it.comigo}"><span class="ico" aria-hidden="true">🧍</span>Comigo</button></div>`;
+  }
+  const collapse=done?`<button class="icon-btn" data-action="collapse" ${ids} aria-label="Recolher ${esc(it.name)}">▴</button>`:'<span></span>';
+  return `<div class="item"><div class="item-r1">${collapse}<div class="item-name">${esc(it.name)}</div>
+    <button class="qty mono ${it.qty>1?'multi':''}" data-action="qty" ${ids} aria-label="Quantidade de ${esc(it.name)}: ${it.qty}. Toque para alterar">×${it.qty}</button></div>
+    <div class="seg" role="group" aria-label="Status de ${esc(it.name)}">${statusBtns}</div>${row3}</div>`;
+}
+
+function renderChecklist(){
+  const q=lc($('#searchInput').value);
+  const filtering=!!q||pendingOnly||!!statusFilter;
+  let html='',shown=0;
+  data.forEach(cat=>{
+    let items=cat.items.filter(it=>(!q||lc(it.name).includes(q))&&(!statusFilter||it.status===statusFilter)&&(!pendingOnly||!settled(it)));
+    if(!items.length)return;
+    shown+=items.length;
+    items=items.map((it,idx)=>({it,idx})).sort((a,b)=>settled(a.it)-settled(b.it)||a.idx-b.idx).map(x=>x.it);
+    const open=filtering||!cat.collapsed;
+    const done=cat.items.filter(isDone).length;
+    html+=`<section class="category ${open?'':'collapsed'}"><div class="cat-head">
+      <button class="cat-toggle" data-action="toggle-cat" data-cat="${cat.id}" aria-expanded="${open}"><span class="chev" aria-hidden="true">▸</span><span class="cat-title">${esc(cat.name)}</span><span class="cat-count mono">${done}/${cat.items.length}</span></button>
+      <button class="icon-btn bordered" data-action="bulk-cat" data-cat="${cat.id}" aria-label="Marcar a categoria ${esc(cat.name)} inteira" title="Marcar categoria inteira">⚡</button></div>
+      <div class="cat-body">${items.map(it=>itemHtml(cat,it)).join('')}</div></section>`;
+  });
+  if(!shown){
+    let h='Nenhum item encontrado',p='Tente outra palavra ou limpe os filtros.';
+    if(!data.some(c=>c.items.length)){h='Sua lista está vazia';p='Abra a aba Ações e toque em “Restaurar padrão”, ou adicione uma categoria.';}
+    else if(pendingOnly&&!q&&!statusFilter){h='Nada pendente 🎉';p='Tudo que precisava de atenção já está resolvido. Confira o progresso lá em cima.';}
+    html=`<div class="empty" style="grid-column:1/-1">${EMPTY_SVG}<h3>${h}</h3><p>${p}</p></div>`;
+  }
+  $('#catList').innerHTML=html;
+}
+
+function renderManage(){
+  const el=$('#manageList');
+  if(!el.closest('details').open&&el.dataset.built)return; // só reconstrói quando aberto (menos trabalho)
+  el.dataset.built='1';
+  el.innerHTML=data.map(cat=>`<div class="edit-cat">
+    <div class="edit-cat-head"><input value="${esc(cat.name)}" data-role="rename-cat" data-cat="${cat.id}" aria-label="Nome da categoria">
+      <button class="icon-btn del" data-action="del-cat" data-cat="${cat.id}" aria-label="Excluir categoria ${esc(cat.name)}">🗑</button></div>
+    ${cat.items.map(it=>`<div class="edit-item"><input value="${esc(it.name)}" data-role="rename-item" data-cat="${cat.id}" data-item="${it.id}" aria-label="Nome do item">
+      <button class="icon-btn del" data-action="del-item" data-cat="${cat.id}" data-item="${it.id}" aria-label="Excluir ${esc(it.name)}">🗑</button></div>`).join('')}
+    <button class="add-btn" data-action="add-item" data-cat="${cat.id}">+ Adicionar item</button></div>`).join('');
+}
+
+function updateActivitySummary(){
+  const n=$('#activityName').value.trim(),d=$('#activityDays').value.trim();
+  $('#activitySummary').innerHTML=n||d?`${esc(n||'Atividade')} <span>${d?'· '+esc(d)+(d==='1'?' dia':' dias'):''}</span>`:'Atividade <span>· toque pra preencher</span>';
+}
+
+/* ============ Ações ============ */
+function setTab(t){
+  currentTab=t;
+  $$('.nav-btn').forEach(b=>b.setAttribute('aria-selected',b.dataset.tab===t));
+  $$('.panel').forEach(p=>p.classList.toggle('active',p.id==='panel-'+t));
+  window.scrollTo({top:0});
+}
+function touchItem(id){expanded.add(id);}
+function persistentAsk(){ // pedido contextual (só depois de uma ação do usuário)
+  if(persistentAsk.done)return; persistentAsk.done=true;
+  try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist();}catch(e){}
+}
+
+const handlers={
+  tab(el){setTab(el.dataset.tab);},
+  filter(el){const s=el.dataset.s;statusFilter=statusFilter===s?null:s;render();},
+  pending(){pendingOnly=!pendingOnly;render();},
+  'toggle-cat'(el){const c=findCat(el.dataset.cat);if(c){c.collapsed=!c.collapsed;save();render();}},
+  expand(el){expanded.add(el.dataset.item);render();},
+  collapse(el){expanded.delete(el.dataset.item);render();},
+  status(el){
+    const f=findItem(el.dataset.item);if(!f)return;const it=f.item;
+    it.status=el.dataset.s;
+    if(it.status!=='casa'){it.emMala=it.emMochila=it.emCaixa=false;}
+    touchItem(it.id);save();vib();persistentAsk();render();
+  },
+  bag(el){
+    const f=findItem(el.dataset.item);if(!f)return;const it=f.item;
+    if(it.status!=='casa'){toast('Só dá pra empacotar o que está em “Casa”.');return;}
+    const fld=BAGS[el.dataset.bag].field;it[fld]=!it[fld];
+    touchItem(it.id);save();vib();persistentAsk();render();
+  },
+  comigo(el){const f=findItem(el.dataset.item);if(!f)return;f.item.comigo=!f.item.comigo;touchItem(f.item.id);save();vib();render();},
+  async qty(el){
+    const f=findItem(el.dataset.item);if(!f)return;
+    const v=await askInput({title:'Quantidade',label:f.item.name,value:String(f.item.qty),type:'number'});
+    if(v===null)return;const n=parseInt(v,10);
+    f.item.qty=(Number.isFinite(n)&&n>=1)?n:1;touchItem(f.item.id);save();render();
+  },
+  async 'bulk-cat'(el){
+    const c=findCat(el.dataset.cat);if(!c)return;
+    const v=await askChoice({title:`Marcar “${c.name}” inteira como:`,options:[
+      {value:'casa',label:'🎒 Levar de casa'},{value:'quartel',label:'🏠 Já no quartel'},{value:'comprar',label:'🛒 Comprar'},{value:'nao',label:'🚫 Não levo'}]});
+    if(!v)return;
+    mutate(`Categoria “${c.name}”: ${STATUS_LABEL[v].toLowerCase()}`,()=>{
+      c.items.forEach(i=>{i.status=v;if(v!=='casa')i.emMala=i.emMochila=i.emCaixa=false;});
+    });
+  },
+  'del-item'(el){
+    const f=findItem(el.dataset.item);if(!f)return;const{cat,item}=f;
+    mutate(`“${item.name}” removido`,()=>{
+      if(item.defKey)removedList.push(item.defKey);
+      cat.items=cat.items.filter(i=>i.id!==item.id);
+    });
+    $('#manageList').dataset.built='';renderManage();
+  },
+  'del-cat'(el){
+    const c=findCat(el.dataset.cat);if(!c)return;
+    mutate(`Categoria “${c.name}” removida`,()=>{
+      c.items.forEach(i=>{if(i.defKey)removedList.push(i.defKey);});
+      data=data.filter(x=>x.id!==c.id);
+    });
+    $('#manageList').dataset.built='';renderManage();
+  },
+  async 'add-item'(el){
+    const c=findCat(el.dataset.cat);if(!c)return;
+    const v=await askInput({title:'Novo item',label:`Em ${c.name}`,placeholder:'Nome do item',okText:'Adicionar'});
+    if(!v)return;
+    const it=mkItem(v);it.defKey=null;c.items.push(it);expanded.add(it.id);save();
+    $('#manageList').dataset.built='';render();toast(`“${v}” adicionado`);
+  },
+  async 'add-cat'(){
+    const v=await askInput({title:'Nova categoria',label:'Nome',placeholder:'Ex: Ferramentas',okText:'Criar'});
+    if(!v)return;data.push({id:uid(),name:v,collapsed:false,items:[]});save();
+    $('#manageList').dataset.built='';render();toast(`Categoria “${v}” criada`);
+  },
+  'nova-saida'(){
+    mutate('Nova saída: empacotamento zerado',()=>{data.forEach(c=>c.items.forEach(i=>{i.emMala=i.emMochila=i.emCaixa=false;}));expanded.clear();});
+  },
+  limpar(){
+    mutate('Lista zerada: todos “sem definir”',()=>{data.forEach(c=>c.items.forEach(i=>{i.status='indefinido';i.emMala=i.emMochila=i.emCaixa=i.comigo=false;}));expanded.clear();});
+  },
+  restaurar(){
+    mutate('Lista padrão restaurada',()=>{data=normalize(defaultData());removedList=[];expanded.clear();});
+    $('#manageList').dataset.built='';renderManage();
+  },
+  'suggest-qty'(){
+    const days=parseInt($('#activityDays').value,10);
+    if(!Number.isFinite(days)||days<1){toast('Preencha “Dias” na aba Checklist primeiro.');setTab('checklist');$('#activityBox').open=true;setTimeout(()=>$('#activityDays').focus(),50);return;}
+    let n=0;
+    mutate(`${days} dia(s): quantidades de uso diário ajustadas`,()=>{data.forEach(c=>c.items.forEach(i=>{if(i.highUse){i.qty=days;n++;}}));});
+  },
+  copiar(){
+    const text=buildExportText();
+    const fallback=()=>{const ta=document.createElement('textarea');ta.value=text;ta.style.cssText='position:fixed;opacity:0';document.body.appendChild(ta);ta.select();
+      let ok=false;try{ok=document.execCommand('copy');}catch(e){}ta.remove();toast(ok?'Lista copiada ✅':'Não consegui copiar. Use o botão WhatsApp.');};
+    if(navigator.clipboard&&window.isSecureContext)navigator.clipboard.writeText(text).then(()=>toast('Lista copiada ✅')).catch(fallback);else fallback();
+  },
+  whats(){window.open('https://wa.me/?text='+encodeURIComponent(buildExportText()),'_blank','noopener');},
+  'backup-down'(){
+    const payload={app:'checklist-campo-eb',version:2,exportedAt:new Date().toISOString(),activityName:$('#activityName').value,activityDays:$('#activityDays').value,removed:removedList,data};
+    const url=URL.createObjectURL(new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}));
+    const a=document.createElement('a');a.href=url;a.download='checklist-campo-backup-'+new Date().toISOString().slice(0,10)+'.json';
+    document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);
+    toast('Backup baixado ✅');
+  },
+  'backup-up'(){$('#backupFile').click();},
+  theme(el){applyTheme(el.dataset.themeV,true);},
+  async install(){
+    if(!deferredPrompt)return;deferredPrompt.prompt();
+    try{const r=await deferredPrompt.userChoice;if(r.outcome==='accepted')toast('Instalando… procure o ícone na tela inicial.');}catch(e){}
+    deferredPrompt=null;$('#btnInstall').hidden=true;
+  }
+};
+
+document.addEventListener('click',e=>{
+  const el=e.target.closest('[data-action]');if(!el)return;
+  const h=handlers[el.dataset.action];if(h)h(el);
+});
+document.addEventListener('change',e=>{
+  const t=e.target;
+  if(t.dataset.role==='rename-item'){const f=findItem(t.dataset.item);if(f&&t.value.trim()){f.item.name=t.value.trim();save();renderSummary();renderChecklist();}}
+  if(t.dataset.role==='rename-cat'){const c=findCat(t.dataset.cat);if(c&&t.value.trim()){c.name=t.value.trim();save();renderChecklist();}}
+});
+$('#searchInput').addEventListener('input',()=>renderChecklist());
+$('#activityName').addEventListener('input',e=>{store.set(ACTIVITY_KEY,e.target.value);updateActivitySummary();});
+$('#activityDays').addEventListener('input',e=>{store.set(DAYS_KEY,e.target.value);updateActivitySummary();});
+$('details.edit').addEventListener('toggle',()=>{ if($('details.edit').open){$('#manageList').dataset.built='';renderManage();} });
+
+$('#backupFile').addEventListener('change',e=>{
+  const file=e.target.files[0];e.target.value='';if(!file)return;
+  const r=new FileReader();
+  r.onload=()=>{
+    try{
+      const p=JSON.parse(r.result);if(!p||!Array.isArray(p.data))throw new Error('formato');
+      mutate('Backup importado ✅',()=>{
+        data=normalize(p.data);removedList=Array.isArray(p.removed)?p.removed:[];expanded.clear();
+        $('#activityName').value=p.activityName||'';$('#activityDays').value=p.activityDays||'';
+        store.set(ACTIVITY_KEY,$('#activityName').value);store.set(DAYS_KEY,$('#activityDays').value);
+      });
+      $('#manageList').dataset.built='';renderManage();
+    }catch(err){toast('Arquivo inválido. Use um backup .json gerado por este app.');}
+  };
+  r.readAsText(file);
+});
+
+/* ============ Exportar texto / WhatsApp ============ */
+function buildExportText(){
+  const name=$('#activityName').value.trim(),days=$('#activityDays').value.trim();
+  const L=[];
+  L.push('📋 *CHECKLIST DE CAMPO*'+(name?' — '+name:''));
+  if(days)L.push('Duração: '+days+' dia(s)');
+  L.push('Atualizado em '+new Date().toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'}));L.push('');
+  data.forEach(cat=>{
+    if(!cat.items.length)return;
+    L.push('*'+cat.name.toUpperCase()+'*');
+    cat.items.forEach(i=>{
+      let icon;
+      if(i.status==='casa')icon=isPacked(i)?'☑':'☐';
+      else icon={quartel:'🏠',comprar:'🛒',nao:'🚫',indefinido:'❔'}[i.status];
+      let pack='';if(i.emMala)pack+=' 🧳';if(i.emMochila)pack+=' 🎒';if(i.emCaixa)pack+=' 📦';
+      L.push(icon+' '+i.name+(i.qty>1?' ×'+i.qty:'')+pack+(i.comigo?' 🧍':''));
+    });
+    L.push('');
+  });
+  L.push('Legenda: ❔ sem definir · ☐ falta empacotar · ☑ empacotado · 🧳 mala · 🎒 mochila · 📦 caixa preta · 🏠 já no quartel · 🛒 comprar · 🚫 não levo · 🧍 levar comigo');
+  return L.join('\n').trim();
+}
+
+/* ============ Tema ============ */
+function applyTheme(v,persist){
+  const root=document.documentElement;
+  if(v==='light'||v==='dark')root.setAttribute('data-theme',v);else root.removeAttribute('data-theme');
+  if(persist)store.set(THEME_KEY,v);
+  $$('[data-action="theme"]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.themeV===(v==='light'||v==='dark'?v:'auto')));
+}
+
+/* ============ PWA: instalar + offline ============ */
+let deferredPrompt=null;
+const isStandalone=()=>window.matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;if(!isStandalone())$('#btnInstall').hidden=false;});
+window.addEventListener('appinstalled',()=>{deferredPrompt=null;$('#btnInstall').hidden=true;toast('App instalado ✅');});
+function refreshAppStatus(){
+  const st=$('#installStatus');
+  if(isStandalone())st.textContent='Você está usando o app instalado. Tudo é salvo neste aparelho e funciona sem internet.';
+  else if(/iphone|ipad|ipod/i.test(navigator.userAgent)){$('#iosHint').hidden=false;st.textContent='Instale na tela inicial pra abrir como app e usar offline.';}
+  else st.textContent=location.protocol==='file:'?'Aberto como arquivo. Para instalar como app, publique a pasta em um endereço https (veja o guia).':'Instale pra abrir como app e usar sem internet.';
+}
+if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'||location.hostname==='127.0.0.1')){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('sw.js').then(reg=>{
+      if(!navigator.serviceWorker.controller&&reg.installing){
+        reg.installing.addEventListener('statechange',e=>{if(e.target.state==='activated')toast('Pronto para usar offline ✅');});
+      }
+    }).catch(()=>{});
+  });
+}
+
+/* ============ Inicialização ============ */
+(function init(){
+  load();
+  try{$('#activityName').value=store.get(ACTIVITY_KEY)||'';$('#activityDays').value=store.get(DAYS_KEY)||'';}catch(e){}
+  const th=store.get(THEME_KEY);applyTheme(th==='light'||th==='dark'?th:'auto',false);
+  const qs=new URLSearchParams(location.search);
+  if(qs.get('filter')==='pending')pendingOnly=true;
+  if(qs.get('tab')==='acoes')setTab('acoes');
+  if(!$('#activityName').value&&!$('#activityDays').value)$('#activityBox').open=true;
+  refreshAppStatus();
+  render();
+  if(mergedAdded>0)toast(`${mergedAdded} item(ns) novo(s) do padrão adicionado(s) à sua lista`);
+})();
+</script>
+</body>
+</html>
