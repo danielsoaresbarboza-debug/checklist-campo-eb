@@ -235,6 +235,7 @@ details.activity[open] summary::after{transform:rotate(180deg)}
 .empty p{margin:0 auto;max-width:34ch;font-size:.9rem}
 
 /* ============ Botões gerais ============ */
+a.btn{text-decoration:none}
 .btn{min-height:var(--touch);padding:0 16px;border-radius:12px;border:1.5px solid var(--line);background:var(--surface);color:var(--text);
   font-weight:700;font-size:.9rem;display:inline-flex;align-items:center;justify-content:center;gap:8px;text-align:center}
 .btn:active{transform:scale(.98)}
@@ -384,6 +385,24 @@ dialog h2{margin:0 0 12px;font-size:1rem}
             <p>Seus dados ficam só neste aparelho. Baixe um backup antes de trocar de celular ou limpar o navegador.</p>
             <div class="row"><button class="btn" data-action="backup-down">⬇️ Baixar backup</button><button class="btn" data-action="backup-up">⬆️ Importar backup</button></div>
             <input type="file" id="backupFile" accept="application/json,.json" hidden>
+          </div>
+
+          <div class="card wide" id="googleCard">
+            <h2>☁️ Google Planilhas</h2>
+            <p>Entre com sua conta Google e o app cria no seu Drive uma planilha “Checklist de Campo EB” com uma aba <b>Dashboard</b> (resumo, % empacotado, por bagagem e por categoria, com gráfico) e uma aba <b>Itens</b>. Toque de novo para atualizar. O app só enxerga a planilha que ele mesmo criou.</p>
+            <div class="row">
+              <button class="btn primary" data-action="g-sync" id="btnGSync">🔐 Entrar com Google e criar planilha</button>
+              <a class="btn" id="gLink" href="#" target="_blank" rel="noopener" hidden>📂 Abrir no Drive</a>
+              <button class="btn ghost" data-action="g-unlink" id="btnGUnlink" hidden>Desvincular</button>
+            </div>
+            <p class="mono" id="gStatus" role="status" style="margin-top:10px"></p>
+            <details class="activity" style="margin-top:6px">
+              <summary><span aria-hidden="true">🔑</span><span class="sum-text">Configuração (uma vez)</span></summary>
+              <div class="activity-body" style="grid-template-columns:1fr">
+                <label class="field"><span>Client ID do Google</span><input id="gClientId" type="text" placeholder="123456-abc.apps.googleusercontent.com" autocomplete="off" autocapitalize="off" spellcheck="false"></label>
+                <p style="margin:0">Crie em console.cloud.google.com → APIs e serviços → Credenciais → ID do cliente OAuth (Aplicativo da Web). Em “Origens JavaScript autorizadas” use <b id="gOrigin"></b>. Ative a <b>Google Sheets API</b> e a tela de consentimento (adicione seu e-mail como usuário de teste).</p>
+              </div>
+            </details>
           </div>
 
           <details class="edit wide">
@@ -862,6 +881,152 @@ if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostnam
   });
 }
 
+/* ============ Google Planilhas (login + dashboard no Drive) ============ */
+const GCLIENT_KEY='checklistCampoEB_gclient_v1', GSHEET_KEY='checklistCampoEB_gsheet_v1';
+const GOOGLE_CLIENT_ID='';   // opcional: fixe aqui o Client ID para não precisar digitar
+const GSCOPE='https://www.googleapis.com/auth/drive.file';
+let gisPromise=null,gToken=null,gTokenExp=0,gBusy=false;
+
+function loadGis(){
+  if(window.google&&google.accounts&&google.accounts.oauth2)return Promise.resolve();
+  if(gisPromise)return gisPromise;
+  gisPromise=new Promise((res,rej)=>{
+    const s=document.createElement('script');s.src='https://accounts.google.com/gsi/client';s.async=true;
+    s.onload=res;s.onerror=()=>{gisPromise=null;rej(new Error('offline'));};document.head.appendChild(s);
+  });
+  return gisPromise;
+}
+function gAuth(clientId){
+  return new Promise((resolve,reject)=>{
+    if(gToken&&Date.now()<gTokenExp-60000){resolve(gToken);return;}
+    const tc=google.accounts.oauth2.initTokenClient({client_id:clientId,scope:GSCOPE,
+      callback:r=>{if(r.error){reject(new Error(r.error));return;}gToken=r.access_token;gTokenExp=Date.now()+(r.expires_in||3600)*1000;resolve(gToken);},
+      error_callback:e=>reject(new Error((e&&e.type)||'popup'))});
+    tc.requestAccessToken();
+  });
+}
+async function gApi(method,url,body){
+  const r=await fetch(url,{method,headers:{Authorization:'Bearer '+gToken,'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined});
+  if(!r.ok){
+    let msg='';try{msg=(await r.json()).error.message;}catch(e){}
+    const err=new Error(msg||('HTTP '+r.status));err.status=r.status;throw err;
+  }
+  return r.json();
+}
+const safeCell=v=>{v=String(v);return /^[=+\-@]/.test(v)?"'"+v:v;};
+const SHEETS='https://sheets.googleapis.com/v4/spreadsheets';
+
+function gBuildItens(){
+  const rows=[['Categoria','Item','Status','Qtd','Mala','Mochila','Caixa Preta','Comigo','Empacotado']];
+  data.forEach(c=>c.items.forEach(i=>rows.push([safeCell(c.name),safeCell(i.name),STATUS_LABEL[i.status],i.qty,
+    i.emMala?'Sim':'',i.emMochila?'Sim':'',i.emCaixa?'Sim':'',i.comigo?'Sim':'',
+    (i.status==='casa'&&isPacked(i))?'Sim':''])));
+  return rows;
+}
+function gBuildDash(){
+  const name=$('#activityName').value.trim(),days=$('#activityDays').value.trim();
+  const cats=data.filter(c=>c.items.length);
+  const n=Math.max(cats.length+4,19);
+  const g=Array.from({length:n},()=>Array(8).fill(''));
+  const R='Itens!$';
+  g[0][0]='Checklist de Campo EB'+(name?' — '+name:'')+(days?' ('+days+' dia(s))':'');
+  g[1][0]='Atualizado em '+new Date().toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'});
+  g[2][0]='RESUMO';g[2][3]='POR CATEGORIA';
+  g[3][0]='Total de itens';g[3][1]='=COUNTA(Itens!$B$2:$B)';
+  ['casa','quartel','comprar','nao','indefinido'].forEach((s,k)=>{
+    g[4+k][0]=STATUS_LABEL[s];g[4+k][1]='=COUNTIF(Itens!$C$2:$C,"'+STATUS_LABEL[s]+'")';});
+  g[10][0]='Empacotado (de casa)';g[10][1]='=COUNTIFS(Itens!$C$2:$C,"Levar de casa",Itens!$I$2:$I,"Sim")';
+  g[11][0]='Falta empacotar';g[11][1]='=B5-B11';
+  g[12][0]='% empacotado';g[12][1]='=IF(B5=0,0,B11/B5)';
+  g[14][0]='🧳 Mala';g[14][1]='=COUNTIF(Itens!$E$2:$E,"Sim")';
+  g[15][0]='🎒 Mochila';g[15][1]='=COUNTIF(Itens!$F$2:$F,"Sim")';
+  g[16][0]='📦 Caixa Preta';g[16][1]='=COUNTIF(Itens!$G$2:$G,"Sim")';
+  g[17][0]='🧍 Levar comigo';g[17][1]='=COUNTIF(Itens!$H$2:$H,"Sim")';
+  g[3][3]='Categoria';g[3][4]='Itens';g[3][5]='Levar de casa';g[3][6]='Empacotado';g[3][7]='Falta';
+  cats.forEach((c,k)=>{const r=5+k;   // linha da planilha (a partir da 5)
+    g[4+k][3]=safeCell(c.name);
+    g[4+k][4]='=COUNTIF(Itens!$A$2:$A,D'+r+')';
+    g[4+k][5]='=COUNTIFS(Itens!$A$2:$A,D'+r+',Itens!$C$2:$C,"Levar de casa")';
+    g[4+k][6]='=COUNTIFS(Itens!$A$2:$A,D'+r+',Itens!$C$2:$C,"Levar de casa",Itens!$I$2:$I,"Sim")';
+    g[4+k][7]='=F'+r+'-G'+r;});
+  return g;
+}
+function gFormatRequests(){
+  const hdr={backgroundColor:{red:.22,green:.27,blue:.12},textFormat:{bold:true,foregroundColor:{red:1,green:1,blue:1}}};
+  const sec={textFormat:{bold:true,foregroundColor:{red:.33,green:.36,blue:.27}}};
+  const rep=(sheetId,r0,r1,c0,c1,fmt,fields)=>({repeatCell:{range:{sheetId,startRowIndex:r0,endRowIndex:r1,startColumnIndex:c0,endColumnIndex:c1},cell:{userEnteredFormat:fmt},fields}});
+  const w=(sheetId,c0,c1,px)=>({updateDimensionProperties:{range:{sheetId,dimension:'COLUMNS',startIndex:c0,endIndex:c1},properties:{pixelSize:px},fields:'pixelSize'}});
+  return [
+    rep(1,0,1,0,9,hdr,'userEnteredFormat(backgroundColor,textFormat)'),
+    {setBasicFilter:{filter:{range:{sheetId:1,startRowIndex:0,startColumnIndex:0,endColumnIndex:9}}}},
+    w(1,0,1,170),w(1,1,2,230),w(1,2,3,130),w(1,3,9,95),
+    rep(0,0,1,0,1,{textFormat:{bold:true,fontSize:16}},'userEnteredFormat.textFormat'),
+    rep(0,2,3,0,4,sec,'userEnteredFormat.textFormat'),
+    rep(0,3,4,3,8,hdr,'userEnteredFormat(backgroundColor,textFormat)'),
+    rep(0,12,13,1,2,{numberFormat:{type:'PERCENT',pattern:'0%'}},'userEnteredFormat.numberFormat'),
+    rep(0,3,18,1,2,{horizontalAlignment:'RIGHT'},'userEnteredFormat.horizontalAlignment'),
+    w(0,0,1,190),w(0,1,2,70),w(0,2,3,30),w(0,3,4,190),w(0,4,8,105),
+    {addChart:{chart:{spec:{title:'Status dos itens',pieChart:{legendPosition:'RIGHT_LEGEND',
+      domain:{sourceRange:{sources:[{sheetId:0,startRowIndex:4,endRowIndex:9,startColumnIndex:0,endColumnIndex:1}]}},
+      series:{sourceRange:{sources:[{sheetId:0,startRowIndex:4,endRowIndex:9,startColumnIndex:1,endColumnIndex:2}]}}}},
+      position:{overlayPosition:{anchorCell:{sheetId:0,rowIndex:19,columnIndex:0},widthPixels:430,heightPixels:270}}}}}
+  ];
+}
+function setGStatus(msg,err){const el=$('#gStatus');el.textContent=msg||'';el.style.color=err?'var(--comprar)':'var(--muted)';}
+function gShowLink(){
+  const id=store.get(GSHEET_KEY);
+  $('#gLink').hidden=!id;$('#btnGUnlink').hidden=!id;
+  if(id)$('#gLink').href='https://docs.google.com/spreadsheets/d/'+id+'/edit';
+  $('#btnGSync').textContent=id?'🔄 Atualizar planilha no Drive':'🔐 Entrar com Google e criar planilha';
+}
+function gErrMsg(e){
+  const m=String(e&&e.message||e);
+  if(m==='offline'||/Failed to fetch|NetworkError/i.test(m))return 'Sem internet. Conecte-se e tente de novo.';
+  if(/popup_closed|access_denied|popup_failed_to_open/.test(m))return 'Login cancelado ou bloqueado pelo navegador.';
+  if(/has not been used|disabled|SERVICE_DISABLED/i.test(m))return 'Ative a “Google Sheets API” no projeto do Google Cloud.';
+  if(/invalid_client|origin_mismatch|redirect_uri/i.test(m))return 'Client ID inválido ou origem não autorizada. Confira a configuração.';
+  return 'Erro do Google: '+m;
+}
+async function gSync(){
+  if(gBusy)return;
+  const cid=($('#gClientId').value||'').trim()||GOOGLE_CLIENT_ID;
+  if(!cid){toast('Cole o Client ID do Google em “Configuração”.');$('#googleCard details').open=true;setTimeout(()=>$('#gClientId').focus(),50);return;}
+  store.set(GCLIENT_KEY,cid);
+  gBusy=true;const btn=$('#btnGSync');btn.setAttribute('aria-disabled','true');
+  try{
+    setGStatus('Conectando ao Google…');
+    await loadGis();await gAuth(cid);
+    let id=store.get(GSHEET_KEY),fresh=false;
+    if(id){try{await gApi('GET',SHEETS+'/'+id+'?fields=spreadsheetId');}catch(e){if(e.status===404||e.status===403)id=null;else throw e;}}
+    if(!id){
+      setGStatus('Criando planilha no Drive…');
+      const r=await gApi('POST',SHEETS,{properties:{title:'Checklist de Campo EB',locale:'pt_BR'},
+        sheets:[{properties:{sheetId:0,title:'Dashboard'}},{properties:{sheetId:1,title:'Itens',gridProperties:{frozenRowCount:1}}}]});
+      id=r.spreadsheetId;fresh=true;store.set(GSHEET_KEY,id);
+    }
+    setGStatus('Enviando itens e dashboard…');
+    await gApi('POST',SHEETS+'/'+id+'/values:batchClear',{ranges:['Dashboard!A1:H80','Itens!A:I']});
+    await gApi('POST',SHEETS+'/'+id+'/values:batchUpdate',{valueInputOption:'USER_ENTERED',
+      data:[{range:'Dashboard!A1',values:gBuildDash()},{range:'Itens!A1',values:gBuildItens()}]});
+    if(fresh)await gApi('POST',SHEETS+'/'+id+':batchUpdate',{requests:gFormatRequests()});
+    setGStatus('Atualizado em '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})+' ✅');
+    gShowLink();vib(20);toast(fresh?'Planilha criada no seu Drive ✅':'Planilha atualizada ✅');
+  }catch(e){const m=gErrMsg(e);setGStatus(m,true);toast(m);}
+  finally{gBusy=false;btn.removeAttribute('aria-disabled');}
+}
+handlers['g-sync']=gSync;
+handlers['g-unlink']=()=>{
+  const old=store.get(GSHEET_KEY);
+  store.set(GSHEET_KEY,'');gShowLink();setGStatus('');
+  toast('Planilha desvinculada (continua no Drive)',{label:'Desfazer',fn:()=>{store.set(GSHEET_KEY,old);gShowLink();}});
+};
+function initGoogle(){
+  $('#gClientId').value=store.get(GCLIENT_KEY)||GOOGLE_CLIENT_ID;
+  $('#gClientId').addEventListener('change',e=>store.set(GCLIENT_KEY,e.target.value.trim()));
+  $('#gOrigin').textContent=location.origin&&location.origin!=='null'?location.origin:'o endereço https do app';
+  gShowLink();
+}
+
 /* ============ Inicialização ============ */
 (function init(){
   load();
@@ -872,6 +1037,7 @@ if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostnam
   if(qs.get('tab')==='acoes')setTab('acoes');
   if(!$('#activityName').value&&!$('#activityDays').value)$('#activityBox').open=true;
   refreshAppStatus();
+  initGoogle();
   render();
   if(mergedAdded>0)toast(`${mergedAdded} item(ns) novo(s) do padrão adicionado(s) à sua lista`);
 })();
